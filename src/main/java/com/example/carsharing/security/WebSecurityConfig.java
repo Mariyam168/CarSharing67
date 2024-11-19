@@ -18,12 +18,10 @@ public class WebSecurityConfig  {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/users/register", "/users/confirm").permitAll()  // Открываем доступ для регистрации и подтверждения почты
-                        .anyRequest().hasRole("USER") // Открываем доступ ко всем маршрутам для пользователей с ролью "USER"
+                        .requestMatchers("/users/register", "/users/confirm").permitAll()
+                        .anyRequest().hasRole("USER")
                 )
-                .formLogin(AbstractAuthenticationFilterConfigurer::permitAll)
-                .csrf(AbstractHttpConfigurer::disable); // Отключаем CSRF для упрощения тестирования (не рекомендуется для продакшн)
-
+                .csrf(csrf -> csrf.disable());
         return http.build();
     }
 
