@@ -4,10 +4,7 @@ import com.example.carsharing.entity.User;
 import com.example.carsharing.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -18,7 +15,7 @@ public class UserController {
   public UserController(UserService userService) {
       this.userService = userService;
   }
-  @PostMapping("/register")
+    @PostMapping("/register")
     public ResponseEntity<User> registerUser(@RequestBody User user) {
         User newUser = userService.registerUser(
                 user.getUsername(),
@@ -29,6 +26,17 @@ public class UserController {
         );
         return ResponseEntity.ok(newUser);
     }
+
+    @GetMapping("/confirm")
+    public ResponseEntity<String> confirmEmail(@RequestParam String token) {
+        boolean isConfirmed = userService.confirmEmail(token);
+        if (isConfirmed) {
+            return ResponseEntity.ok("Email successfully confirmed!");
+        } else {
+            return ResponseEntity.status(400).body("Invalid or expired token.");
+        }
+    }
+
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userService.getAllUsers();

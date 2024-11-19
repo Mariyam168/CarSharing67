@@ -13,7 +13,7 @@ import java.util.List;
 @Entity
 @Setter
 @Getter
-@Table(name="users")
+@Table(name = "users")
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,6 +29,9 @@ public class User implements UserDetails {
 
     @Enumerated(EnumType.STRING)
     private UserStatus userStatus;
+
+    private String confirmationToken; // Токен для подтверждения email
+    private boolean isEmailConfirmed = false; // Поле для подтверждения email
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
