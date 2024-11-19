@@ -65,7 +65,7 @@ public class CarController {
             @RequestParam String endTime) {
         LocalDateTime start = LocalDateTime.parse(startTime);
         LocalDateTime end = LocalDateTime.parse(endTime);
-        List<Car> availableCars = carService.findAvailableCarsByModelAndDates(tip, start, end);
+        List<Car> availableCars = carService.findAvailableCarsByTipAndDates(tip, start, end);
         return ResponseEntity.ok(availableCars);
     }
 }

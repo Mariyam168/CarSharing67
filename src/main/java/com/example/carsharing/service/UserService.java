@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -73,6 +74,19 @@ public class UserService {
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
+    }
+    public String login(String email, String password) {
+        Optional<User> userOptional = userRepository.findByEmail(email);
+
+        if (userOptional.isEmpty()) {
+            return "User not found";
+        }
+        User user = userOptional.get();
+        if (passwordEncoder.matches(password, user.getPassword())) {
+            return "Login successful for user: " + user.getEmail();
+        } else {
+            return "Invalid email or password";
+        }
     }
 
 }

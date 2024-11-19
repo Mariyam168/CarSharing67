@@ -16,16 +16,17 @@ public interface CarRepository extends JpaRepository<Car, Long> {
     List<Car> findByCarStatus(CarStatus status);
 
     Optional<Car> findByLicensePlate(String licensePlate);
+
     @Query("""
-        SELECT c FROM Car c
-        WHERE c.tip = :tip
-        AND c.carStatus = 'AVAILABLE'
-        AND c.id NOT IN (
-            SELECT b.car.id FROM Booking b
-            WHERE b.startTime < :endTime AND b.endTime > :startTime
-        )
-    """)
-    List<Car> findAvailableCarsByModelAndDates(@Param("model") String tip,
-                                               @Param("startTime") LocalDateTime startTime,
-                                               @Param("endTime") LocalDateTime endTime);
+                SELECT c FROM Car c
+                WHERE c.tip = :tip
+                AND c.carStatus = 'AVAILABLE'
+                AND c.id NOT IN (
+                    SELECT b.car.id FROM Booking b
+                    WHERE b.startTime < :endTime AND b.endTime > :startTime
+                )
+            """)
+    List<Car> findAvailableCarsByTipAndDates(@Param("tip") String tip,
+                                             @Param("startTime") LocalDateTime startTime,
+                                             @Param("endTime") LocalDateTime endTime);
 }
