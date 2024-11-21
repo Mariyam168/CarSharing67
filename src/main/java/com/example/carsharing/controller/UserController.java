@@ -1,6 +1,7 @@
 package com.example.carsharing.controller;
 
 import com.example.carsharing.entity.User;
+import com.example.carsharing.enums.UserStatus;
 import com.example.carsharing.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -41,5 +42,12 @@ public class UserController {
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
+    }
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<User> updateUserStatus(
+            @PathVariable Long id,
+            @RequestParam UserStatus status) {
+        User updatedUser = userService.updateUserStatus(id, status);
+        return ResponseEntity.ok(updatedUser);
     }
 }

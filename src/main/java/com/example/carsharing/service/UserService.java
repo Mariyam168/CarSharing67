@@ -70,6 +70,13 @@ public class UserService {
         }
         return false;
     }
+    public User updateUserStatus(Long userId, UserStatus newStatus) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+        user.setUserStatus(newStatus);
+        return userRepository.save(user);
+    }
+
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
