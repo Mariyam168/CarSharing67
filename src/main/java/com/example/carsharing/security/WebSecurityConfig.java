@@ -8,28 +8,17 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig  {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/users/register", "/users/confirm","/users/login").permitAll()
-                        .anyRequest().authenticated()
+        http.authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/users/register","/users/confirm","/users").permitAll()
+                        .anyRequest().hasRole("USER")
                 )
-                .formLogin(login -> login
-                        .loginPage("/login")
-                        .defaultSuccessUrl("/home", true)
-                        .failureUrl("/login?error=true")
-                        .permitAll()
-                )
-                .logout(logout -> logout
-                        .logoutUrl("/logout")
-                        .logoutSuccessUrl("/login?logout=true")
-                        .permitAll()
-                );
+                .csrf(csrf -> csrf.disable());
         return http.build();
     }
     @Bean

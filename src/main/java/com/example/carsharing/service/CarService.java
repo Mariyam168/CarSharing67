@@ -1,13 +1,10 @@
 package com.example.carsharing.service;
 
 import com.example.carsharing.entity.Car;
-import com.example.carsharing.entity.User;
 import com.example.carsharing.enums.CarStatus;
 import com.example.carsharing.repository.CarRepository;
-import com.example.carsharing.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,10 +40,7 @@ public class CarService {
     public Optional<Car> getCarByLicensePlate(String licensePlate) {
         return carRepository.findByLicensePlate(licensePlate);
     }
-    public List<Car> findAvailableCarsByTipAndDates(String tip, LocalDateTime startTime, LocalDateTime endTime) {
-        return carRepository.findAvailableCarsByTipAndDates(tip, startTime, endTime);
 
-    }
 
 
 }
