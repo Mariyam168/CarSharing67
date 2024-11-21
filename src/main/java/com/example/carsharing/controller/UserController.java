@@ -4,6 +4,7 @@ import com.example.carsharing.entity.User;
 import com.example.carsharing.enums.UserStatus;
 import com.example.carsharing.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,10 +13,12 @@ import java.util.List;
 @Controller
 @RequestMapping("/users")
 public class UserController {
-  private final UserService userService;
-  public UserController(UserService userService) {
-      this.userService = userService;
-  }
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
     @PostMapping("/register")
     public ResponseEntity<User> registerUser(@RequestBody User user) {
         User newUser = userService.registerUser(
@@ -26,6 +29,21 @@ public class UserController {
                 user.getPhone()
         );
         return ResponseEntity.ok(newUser);
+    }
+
+    @PostMapping("/restore_password")
+    public ResponseEntity<String> forgetPassword(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        userService.restorePassword(user);
+        return ResponseEntity.ok("Link sent to your email");
+    }
+
+    /**
+     * TODO: Написать метод, который принимает новый пароль и сохраняет его для юзера
+     */
+    @PutMapping("/restore_password")
+    public ResponseEntity<?> restorePassword() {
+        return null;
     }
 
     @GetMapping("/confirm")
@@ -43,6 +61,7 @@ public class UserController {
         List<User> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }
+
     @PatchMapping("/{id}/status")
     public ResponseEntity<User> updateUserStatus(
             @PathVariable Long id,

@@ -5,8 +5,6 @@ import com.example.carsharing.enums.CarStatus;
 import com.example.carsharing.service.CarService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 

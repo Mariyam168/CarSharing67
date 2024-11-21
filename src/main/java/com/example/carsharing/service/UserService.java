@@ -6,6 +6,9 @@ import com.example.carsharing.enums.UserStatus;
 import com.example.carsharing.repository.RoleRepository;
 import com.example.carsharing.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +16,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
@@ -23,6 +26,7 @@ public class UserService {
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
     }
+
     @Autowired
     private EmailService emailService;
 
@@ -55,7 +59,7 @@ public class UserService {
         String confirmationUrl = "http://localhost:8080/users/confirm?token=" + confirmationToken;
         String text = "Dear " + username + ",\n\nPlease confirm your email by clicking the link below:\n" + confirmationUrl;
 
-        emailService.sendRegistrationEmail(email, subject, text);
+        emailService.sendEmail(email, subject, text);
 
         return newUser;
     }
@@ -70,6 +74,7 @@ public class UserService {
         }
         return false;
     }
+
     public User updateUserStatus(Long userId, UserStatus newStatus) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
@@ -82,4 +87,15 @@ public class UserService {
         return userRepository.findAll();
     }
 
+    public void restorePassword(User user) {
+        String url = "http://localhost:8080/users/restore";
+        emailService.sendEmail(user.getEmail(),
+                "Восстановление пароля",
+                "Перейдите по ссылке для восстановления пароля \n" + url);
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        return null;
+    }
 }
