@@ -4,6 +4,8 @@ import com.example.carsharing.entity.User;
 import com.example.carsharing.enums.UserStatus;
 import com.example.carsharing.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -57,7 +59,8 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
+    @Secured("ROLE_ADMIN")
+    public ResponseEntity<List<User>> getAllUsers(Authentication authentication) {
         List<User> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }

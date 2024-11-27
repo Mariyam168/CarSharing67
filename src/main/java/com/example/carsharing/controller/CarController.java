@@ -4,6 +4,7 @@ import com.example.carsharing.entity.Car;
 import com.example.carsharing.enums.CarStatus;
 import com.example.carsharing.service.CarService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
@@ -23,6 +24,7 @@ public class CarController {
         return ResponseEntity.ok(savedCar);
     }
     @GetMapping
+    @Secured("ROLE_USER")
     public ResponseEntity<List<Car>> getAllCars() {
         List<Car> cars = carService.getAllCars();
         return ResponseEntity.ok(cars);

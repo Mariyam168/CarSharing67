@@ -6,6 +6,8 @@ import com.example.carsharing.enums.UserStatus;
 import com.example.carsharing.repository.RoleRepository;
 import com.example.carsharing.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -13,7 +15,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -89,13 +93,13 @@ public class UserService implements UserDetailsService {
 
     public void restorePassword(User user) {
         String url = "http://localhost:8080/users/restore";
-        emailService.sendEmail(user.getEmail(),
+        emailService.sendEmail(user.getEmail(), 
                 "Восстановление пароля",
                 "Перейдите по ссылке для восстановления пароля \n" + url);
     }
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        return null;
+        return userRepository.getByEmail(email);
     }
 }
