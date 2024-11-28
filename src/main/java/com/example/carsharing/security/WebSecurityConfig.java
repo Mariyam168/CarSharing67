@@ -2,6 +2,8 @@ package com.example.carsharing.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractAuthenticationFilterConfigurer;
@@ -18,8 +20,8 @@ public class WebSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/users/register", "/users/confirm").permitAll()
-                        .requestMatchers("/users", "/cars", "/cars/license/", "/cars/model/", "/cars/status/").hasAuthority("USER")
+                        .requestMatchers("/swagger-ui/**","/users/register", "/users/confirm").permitAll()
+                        .requestMatchers("/users/**", "/cars", "/cars/license/", "/cars/model/", "/cars/status/").hasAuthority("USER")
                         .requestMatchers("/users").hasAuthority("ADMIN")
                         .anyRequest().authenticated()
                 )
@@ -33,4 +35,5 @@ public class WebSecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
 }

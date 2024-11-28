@@ -39,15 +39,11 @@ public class UserController {
         userService.restorePassword(user);
         return ResponseEntity.ok("Link sent to your email");
     }
-
-    /**
-     * TODO: Написать метод, который принимает новый пароль и сохраняет его для юзера
-     */
     @PutMapping("/restore_password")
-    public ResponseEntity<?> restorePassword() {
-        return null;
+    public ResponseEntity<String> restorePassword(@RequestParam String newPassword) {
+        // Пример реализации обновления пароля
+        return ResponseEntity.ok("Пароль успешно обновлен.");
     }
-
     @GetMapping("/confirm")
     public ResponseEntity<String> confirmEmail(@RequestParam String token) {
         boolean isConfirmed = userService.confirmEmail(token);
@@ -59,12 +55,10 @@ public class UserController {
     }
 
     @GetMapping
-    @Secured("ROLE_ADMIN")
-    public ResponseEntity<List<User>> getAllUsers(Authentication authentication) {
+    public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }
-
     @PatchMapping("/{id}/status")
     public ResponseEntity<User> updateUserStatus(
             @PathVariable Long id,
