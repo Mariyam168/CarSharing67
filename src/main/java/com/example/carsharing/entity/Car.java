@@ -27,5 +27,7 @@ public class Car {
     private Long probeg;
     private String color;
     private BigDecimal price;
+    private String CarImage;
+
 
 }

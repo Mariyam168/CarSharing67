@@ -4,15 +4,12 @@ import com.example.carsharing.entity.User;
 import com.example.carsharing.enums.UserStatus;
 import com.example.carsharing.service.UserService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.annotation.Secured;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Controller
+@RestController
 @RequestMapping("/users")
 public class UserController {
     private final UserService userService;
@@ -20,7 +17,6 @@ public class UserController {
     public UserController(UserService userService) {
         this.userService = userService;
     }
-/////
     @PostMapping("/register")
     public ResponseEntity<User> registerUser(@RequestBody User user) {
         User newUser = userService.registerUser(
@@ -53,7 +49,6 @@ public class UserController {
             return ResponseEntity.status(400).body("Invalid or expired token.");
         }
     }
-
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userService.getAllUsers();

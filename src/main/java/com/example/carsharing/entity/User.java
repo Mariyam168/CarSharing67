@@ -30,8 +30,8 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private UserStatus userStatus;
 
-    private String confirmationToken; // Токен для подтверждения email
-    private boolean isEmailConfirmed = false; // Поле для подтверждения email
+    private String confirmationToken;
+    private boolean isEmailConfirmed = false;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
