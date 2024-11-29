@@ -18,10 +18,10 @@ public class WebSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**","/users/register", "/users/confirm","/users/**","/cars/**").permitAll()
-                        .requestMatchers("/users/**", "/cars", "/cars/license/", "/cars/model/", "/cars/status/").hasAuthority("USER")
-                        .requestMatchers("/users","/users/{id}/status","/register","/swagger-ui/**", "/v3/api-docs/**").hasAuthority("ADMIN")
-                        .anyRequest().authenticated()
+//                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**","/users/register", "/users/confirm","/users/**","/cars/**").permitAll()
+//                        .requestMatchers("/users/**", "/cars", "/cars/license/", "/cars/model/", "/cars/status/").hasAuthority("USER")
+//                        .requestMatchers("/users","/users/{id}/status","/register","/swagger-ui/**", "/v3/api-docs/**").hasAuthority("ADMIN")
+                        .anyRequest().permitAll()
                 )
                 .formLogin(AbstractAuthenticationFilterConfigurer::permitAll)
                 .csrf(AbstractHttpConfigurer::disable);

@@ -54,11 +54,5 @@ public class UserController {
         List<User> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }
-    @PatchMapping("/{id}/status")
-    public ResponseEntity<User> updateUserStatus(
-            @PathVariable Long id,
-            @RequestParam UserStatus status) {
-        User updatedUser = userService.updateUserStatus(id, status);
-        return ResponseEntity.ok(updatedUser);
-    }
+
 }
