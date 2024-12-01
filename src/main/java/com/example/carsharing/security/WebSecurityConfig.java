@@ -47,7 +47,7 @@ public class WebSecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         // Разрешение на доступ с других доменов
-        config.setAllowedOrigins(List.of("http://your-other-domain.com")); // Добавьте нужные домены
+        config.setAllowedOrigins(List.of("http://localhost:3000")); // Добавьте нужные домены
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Разрешенные HTTP методы
         config.setAllowedHeaders(List.of("*")); // Разрешить все заголовки
         config.setAllowCredentials(true); // Разрешить учетные данные (если нужно)
