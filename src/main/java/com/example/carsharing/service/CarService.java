@@ -2,6 +2,7 @@ package com.example.carsharing.service;
 
 import com.example.carsharing.entity.Car;
 import com.example.carsharing.enums.CarStatus;
+import com.example.carsharing.repository.BookingRepository;
 import com.example.carsharing.repository.CarRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,11 +14,13 @@ import java.util.Optional;
 public class CarService {
     private final CarRepository carRepository;
     private final FileUploadService fileUploadService;
+    private final BookingRepository bookingRepository;
 
     // Исправлен конструктор: передаем только один экземпляр fileUploadService
-    public CarService(CarRepository carRepository, FileUploadService fileUploadService) {
+    public CarService(CarRepository carRepository, FileUploadService fileUploadService,BookingRepository bookingRepository ) {
         this.carRepository = carRepository;
         this.fileUploadService = fileUploadService;
+        this.bookingRepository = bookingRepository;
     }
 
     // Метод для сохранения автомобиля с изображением
@@ -59,4 +62,5 @@ public class CarService {
     public Optional<Car> getCarByLicensePlate(String licensePlate) {
         return carRepository.findByLicensePlate(licensePlate);
     }
+
 }

@@ -28,6 +28,4 @@ public class Car {
     private String color;
     private BigDecimal price;
     private String CarImage;
-
-
 }
