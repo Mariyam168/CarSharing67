@@ -5,7 +5,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Entity
 @Setter
@@ -21,8 +22,10 @@ public class Booking {
     @ManyToOne
     @JoinColumn(name = "car_id")
     private Car car;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
+    private LocalDate startDate;
+    private LocalDate endDate;
     private BookingStatus status;
+    private BigDecimal advancePayment;
+    private BigDecimal totalPrice;
 
 }
