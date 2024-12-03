@@ -39,7 +39,7 @@ public class CarController {
                                                @RequestParam("licensePlate") String licensePlate,
                                                @RequestParam("carStatus") CarStatus carStatus,
                                                @RequestParam("volume") int volume,
-                                               @RequestParam("probeg") Long probeg,
+                                               @RequestParam("probeg") double probeg,
                                                @RequestParam("color") String color,
                                                @RequestParam("price") BigDecimal price,
                                                @RequestParam("image") MultipartFile image) {
