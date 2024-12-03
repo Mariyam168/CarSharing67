@@ -24,7 +24,7 @@ public class Car {
     @Enumerated(EnumType.STRING)
     private CarStatus carStatus;
     private int volume;
-    private Long probeg;
+    private double probeg;
     private String color;
     private BigDecimal price;
     private String CarImage;
