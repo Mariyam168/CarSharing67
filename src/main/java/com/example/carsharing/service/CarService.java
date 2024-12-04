@@ -2,11 +2,11 @@ package com.example.carsharing.service;
 
 import com.example.carsharing.entity.Car;
 import com.example.carsharing.enums.CarStatus;
-import com.example.carsharing.repository.BookingRepository;
 import com.example.carsharing.repository.CarRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,17 +14,15 @@ import java.util.Optional;
 public class CarService {
     private final CarRepository carRepository;
     private final FileUploadService fileUploadService;
-    private final BookingRepository bookingRepository;
 
     // Исправлен конструктор: передаем только один экземпляр fileUploadService
-    public CarService(CarRepository carRepository, FileUploadService fileUploadService,BookingRepository bookingRepository ) {
+    public CarService(CarRepository carRepository, FileUploadService fileUploadService) {
         this.carRepository = carRepository;
         this.fileUploadService = fileUploadService;
-        this.bookingRepository = bookingRepository;
     }
 
     // Метод для сохранения автомобиля с изображением
-    public Car saveCarWithImage(Car car, MultipartFile image) {
+    public Car saveCarWithImage(Car car, MultipartFile image) throws IOException {
         // Сохраняем изображение и получаем путь
         String imagePath = fileUploadService.storeFile(image);
 
@@ -63,4 +61,12 @@ public class CarService {
         return carRepository.findByLicensePlate(licensePlate);
     }
 
+    public String getPhotoByCarId(Long id) {
+        // Получаем автомобиль по ID
+        Optional<Car> car = carRepository.findById(id);
+
+        // Если автомобиль найден, возвращаем путь к его изображению
+        return car.map(Car::getCarImage)
+                .orElseThrow(() -> new RuntimeException("Car not found with ID: " + id));
+    }
 }

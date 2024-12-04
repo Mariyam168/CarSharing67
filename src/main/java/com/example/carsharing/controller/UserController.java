@@ -1,10 +1,20 @@
 package com.example.carsharing.controller;
 
+import com.example.carsharing.dto.LoginRequest;
+import com.example.carsharing.dto.LoginResponse;
 import com.example.carsharing.entity.User;
-import com.example.carsharing.enums.UserStatus;
+import com.example.carsharing.security.JwtUtil;
 import com.example.carsharing.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,11 +22,72 @@ import java.util.List;
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    private final UserService userService;
+    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+    @Autowired
+    private UserDetailsService userDetailsService;  // для загрузки данных пользователя
 
-    public UserController(UserService userService) {
+    @Autowired
+    private PasswordEncoder passwordEncoder;  // для проверки пароля
+
+    private final UserService userService;
+    private final JwtUtil jwtUtil;
+
+    // Конструктор с внедрением зависимостей
+    public UserController(UserService userService, JwtUtil jwtUtil) {
         this.userService = userService;
+        this.jwtUtil = jwtUtil;
     }
+    @GetMapping("/getusers")
+    public ResponseEntity<User> getUser(@RequestParam String email) {
+        System.out.println("Получен запрос с email: " + email);
+
+        User user = userService.getUserByEmail(email);
+        if (user == null) {
+            System.out.println("Пользователь не найден");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        System.out.println("Пользователь найден: " + user.getEmail());
+        return ResponseEntity.ok(user);
+    }
+
+
+
+    // Логин: получение JWT токена при успешной аутентификации
+    @PostMapping("/auth/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        try {
+            logger.info("Login attempt for user: {}", request.getEmail());
+
+            // Получаем пользователя через userDetailsService
+            UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
+            if (userDetails == null) {
+                throw new UsernameNotFoundException("User not found");
+            }
+
+            logger.info("User found: {}", userDetails.getUsername());
+
+            // Проверяем, совпадает ли пароль
+            if (passwordEncoder.matches(request.getPassword(), userDetails.getPassword())) {
+                // Если пароль правильный, генерируем токен
+                String token = jwtUtil.generateToken(request.getEmail());
+                return ResponseEntity.ok(new LoginResponse(token)); // Возвращаем токен
+            } else {
+                // Если пароль неверный
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid password");
+            }
+        } catch (UsernameNotFoundException e) {
+            logger.error("Error: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
+        } catch (Exception e) {
+            logger.error("Internal server error: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal server error");
+        }
+    }
+
+
+
+    // Регистрация нового пользователя
     @PostMapping("/register")
     public ResponseEntity<User> registerUser(@RequestBody User user) {
         User newUser = userService.registerUser(
@@ -29,17 +100,15 @@ public class UserController {
         return ResponseEntity.ok(newUser);
     }
 
+    // Восстановление пароля
     @PostMapping("/restore_password")
     public ResponseEntity<String> forgetPassword(Authentication authentication) {
         User user = (User) authentication.getPrincipal();
         userService.restorePassword(user);
         return ResponseEntity.ok("Link sent to your email");
     }
-    @PutMapping("/restore_password")
-    public ResponseEntity<String> restorePassword(@RequestParam String newPassword) {
-        // Пример реализации обновления пароля
-        return ResponseEntity.ok("Пароль успешно обновлен.");
-    }
+
+    // Подтверждение email
     @GetMapping("/confirm")
     public ResponseEntity<String> confirmEmail(@RequestParam String token) {
         boolean isConfirmed = userService.confirmEmail(token);
@@ -49,10 +118,21 @@ public class UserController {
             return ResponseEntity.status(400).body("Invalid or expired token.");
         }
     }
+
+    // Обновление пароля (пример)
+    @PutMapping("/update_password")
+    public ResponseEntity<String> updatePassword(@RequestParam String newPassword, Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        String encodedPassword = passwordEncoder.encode(newPassword);  // Хэшируем новый пароль
+        user.setPassword(encodedPassword);  // Обновляем пароль пользователя
+        userService.restorePassword(user);  // Сохраняем изменения в базе данных
+        return ResponseEntity.ok("Password successfully updated.");
+    }
+
+    // Получить всех пользователей
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }
-
 }
