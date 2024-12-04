@@ -53,7 +53,6 @@ public class WebSecurityConfig {
         config.setAllowCredentials(true); // Разрешить учетные данные (если нужно)
 
         source.registerCorsConfiguration("/", config);
-
         return source;
     }
 }
