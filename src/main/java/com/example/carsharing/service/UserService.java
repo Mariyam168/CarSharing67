@@ -5,18 +5,26 @@ import com.example.carsharing.entity.User;
 import com.example.carsharing.enums.UserStatus;
 import com.example.carsharing.repository.RoleRepository;
 import com.example.carsharing.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+
 @Service
 public class UserService implements UserDetailsService {
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
+
+
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
@@ -64,6 +72,7 @@ public class UserService implements UserDetailsService {
         return newUser;
     }
 
+
     public boolean confirmEmail(String token) {
         User user = userRepository.findByConfirmationToken(token).orElse(null);
         if (user != null) {
@@ -82,20 +91,48 @@ public class UserService implements UserDetailsService {
         return userRepository.save(user);
     }
 
-
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
     public void restorePassword(User user) {
         String url = "http://localhost:8080/users/restore";
-        emailService.sendEmail(user.getEmail(), 
+        emailService.sendEmail(user.getEmail(),
                 "Восстановление пароля",
                 "Перейдите по ссылке для восстановления пароля \n" + url);
     }
-
+    @Transactional
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        return userRepository.getByEmail(email);
+        logger.info("Searching user by email: {}", email);
+
+        // Ищем пользователя по email
+        User user = userRepository.getByEmail(email);  // без Optional
+
+        // Проверяем, найден ли пользователь
+        if (user == null) {
+            logger.error("User not found with email: {}", email);
+            throw new UsernameNotFoundException("User not found with email: " + email);
+        }
+
+        logger.info("User found: {}", user.getEmail());
+
+        // Преобразуем объект User в UserDetails без использования ролей
+        return new org.springframework.security.core.userdetails.User(
+                user.getEmail(),
+                user.getPassword(),
+                Collections.emptyList()  // Пустой список authorities, так как роли не используются
+        );
     }
+
+    public User getUserByEmail(String email) {
+        User user = userRepository.getByEmail(email);
+        if (user == null) {
+            throw new UsernameNotFoundException("User not found with email: " + email);
+        }
+        return user;
+    }
+
+
+
 }

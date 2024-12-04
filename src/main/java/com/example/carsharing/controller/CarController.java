@@ -3,12 +3,20 @@ package com.example.carsharing.controller;
 import com.example.carsharing.entity.Car;
 import com.example.carsharing.enums.CarStatus;
 import com.example.carsharing.service.CarService;
+
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,7 +38,7 @@ public class CarController {
     }
 
     // Добавление машины с изображением
-    @PostMapping("/add")
+    @PostMapping(value = "/add", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<Car> addCarWithImage(@RequestParam("make") String make,
                                                @RequestParam("model") String model,
                                                @RequestParam("tip") String tip,
@@ -42,7 +50,7 @@ public class CarController {
                                                @RequestParam("probeg") double probeg,
                                                @RequestParam("color") String color,
                                                @RequestParam("price") BigDecimal price,
-                                               @RequestParam("image") MultipartFile image) {
+                                               @RequestParam("image") MultipartFile image) throws IOException {
         Car car = new Car();
         car.setMake(make);
         car.setModel(model);
@@ -77,6 +85,30 @@ public class CarController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/{id}/photo")
+    public ResponseEntity<Resource> getCarPhoto(@PathVariable Long id) {
+        // Получаем путь к изображению из сервиса
+        String imagePath = carService.getPhotoByCarId(id);
+
+        try {
+            // Преобразуем путь к ресурсу
+            Path filePath = Paths.get(imagePath).toAbsolutePath().normalize();
+            Resource resource = new UrlResource(filePath.toUri());
+
+            if (resource.exists() && resource.isReadable()) {
+                // Возвращаем файл с правильным типом содержимого
+                return ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_TYPE, "image/jpeg") // Укажите нужный тип файла
+                        .body(resource);
+            } else {
+                throw new RuntimeException("File not found or not readable: " + imagePath);
+            }
+        } catch (Exception e) {
+            // Обработка ошибки при загрузке файла
+            return ResponseEntity.internalServerError()
+                    .body(null); // Можно добавить более подробное сообщение об ошибке
+        }
+    }
     // Удаление машины по ID
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCarById(@PathVariable Long id) {
