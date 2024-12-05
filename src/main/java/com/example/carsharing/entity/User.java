@@ -38,7 +38,7 @@ public class User implements UserDetails {
     // Поля для восстановления пароля
     private String passwordResetToken;
     @Column(name = "password_reset_token_expiration")
-    private long passwordResetTokenExpiration;
+    private long passwordResetTokenExpiration=0;
 
 
 
