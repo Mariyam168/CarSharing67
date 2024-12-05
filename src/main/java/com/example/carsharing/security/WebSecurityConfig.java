@@ -52,8 +52,7 @@ public class WebSecurityConfig {
         config.setAllowedHeaders(List.of("*")); // Разрешить все заголовки
         config.setAllowCredentials(true); // Разрешить учетные данные (если нужно)
 
-        source.registerCorsConfiguration("/", config);
-
+        source.registerCorsConfiguration("/**", config);
         return source;
     }
 }
