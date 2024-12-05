@@ -26,4 +26,11 @@ public class EmailService {
             throw new RuntimeException("Failed to send email", e);
         }
     }
+    // Метод для отправки письма с ссылкой для сброса пароля
+    public void sendPasswordResetEmail(String to, String resetLink) {
+        String subject = "Password Reset Request";
+        String text = "<p>To reset your password, click the link below:</p>" +
+                "<a href=\"" + resetLink + "\">Reset Password</a>";
+        sendEmail(to, subject, text);
+    }
 }

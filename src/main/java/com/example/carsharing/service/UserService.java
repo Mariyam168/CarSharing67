@@ -1,8 +1,10 @@
 package com.example.carsharing.service;
 
+import com.example.carsharing.entity.PasswordResetToken;
 import com.example.carsharing.entity.Role;
 import com.example.carsharing.entity.User;
 import com.example.carsharing.enums.UserStatus;
+import com.example.carsharing.repository.PasswordResetTokenRepository;
 import com.example.carsharing.repository.RoleRepository;
 import com.example.carsharing.repository.UserRepository;
 import org.slf4j.Logger;
@@ -96,11 +98,59 @@ public class UserService implements UserDetailsService {
     }
 
     public void restorePassword(User user) {
-        String url = "http://localhost:8080/users/restore";
+        // Генерация токена для сброса пароля
+        String resetToken = UUID.randomUUID().toString();
+        user.setPasswordResetToken(resetToken);
+        user.setPasswordResetTokenExpiration(System.currentTimeMillis() + 3600000);  // Срок действия 1 час
+        userRepository.save(user);
+
+        String url = "http://localhost:8080/users/reset_password?token=" + resetToken;
         emailService.sendEmail(user.getEmail(),
                 "Восстановление пароля",
                 "Перейдите по ссылке для восстановления пароля \n" + url);
     }
+
+    @Autowired
+    private PasswordResetTokenRepository passwordResetTokenRepository;
+    public boolean resetPassword(String token, String newPassword) {
+        User user = userRepository.findByPasswordResetToken(token).orElse(null);
+        if (user != null && user.getPasswordResetTokenExpiration() > System.currentTimeMillis()) {
+            // Токен действителен
+            user.setPassword(passwordEncoder.encode(newPassword)); // Хэшируем новый пароль
+            user.setPasswordResetToken(null); // Очищаем токен после использования
+            user.setPasswordResetTokenExpiration(0); // Очищаем срок действия токена
+            userRepository.save(user);
+            return true;
+        }
+        return false;  // Токен не найден или срок действия истек
+    }
+    public String createPasswordResetToken(User user) {
+        // Генерируем токен
+        String token = UUID.randomUUID().toString();
+
+        // Сохраняем токен в базе данных
+        PasswordResetToken resetToken = new PasswordResetToken(token, user);
+        passwordResetTokenRepository.save(resetToken);
+
+        return token;
+    }
+    public User findUserByPasswordResetToken(String token) {
+        // Находим токен в базе данных
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token);
+
+        if (resetToken == null) {
+            return null; // Если токен не найден, возвращаем null
+        }
+
+        // Возвращаем пользователя, связанную с токеном
+        return resetToken.getUser();
+    }
+
+    public void sendPasswordResetEmail(User user, String token) {
+        String resetLink = "http://localhost:8080/users/reset_password?token=" + token;
+        emailService.sendPasswordResetEmail(user.getEmail(), resetLink);
+    }
+
     @Transactional
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {

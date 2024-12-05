@@ -23,6 +23,7 @@ import java.util.List;
 @RequestMapping("/users")
 public class UserController {
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+
     @Autowired
     private UserDetailsService userDetailsService;  // для загрузки данных пользователя
 
@@ -37,6 +38,8 @@ public class UserController {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
     }
+
+    // Получение пользователя по email
     @GetMapping("/getusers")
     public ResponseEntity<User> getUser(@RequestParam String email) {
         System.out.println("Получен запрос с email: " + email);
@@ -50,8 +53,6 @@ public class UserController {
         System.out.println("Пользователь найден: " + user.getEmail());
         return ResponseEntity.ok(user);
     }
-
-
 
     // Логин: получение JWT токена при успешной аутентификации
     @PostMapping("/auth/login")
@@ -85,8 +86,6 @@ public class UserController {
         }
     }
 
-
-
     // Регистрация нового пользователя
     @PostMapping("/register")
     public ResponseEntity<User> registerUser(@RequestBody User user) {
@@ -101,11 +100,45 @@ public class UserController {
     }
 
     // Восстановление пароля
-    @PostMapping("/restore_password")
-    public ResponseEntity<String> forgetPassword(Authentication authentication) {
-        User user = (User) authentication.getPrincipal();
-        userService.restorePassword(user);
-        return ResponseEntity.ok("Link sent to your email");
+    @PostMapping("/forgot_password")
+    public ResponseEntity<String> forgotPassword(@RequestParam String email) {
+        try {
+            // Проверка существования пользователя
+            User user = userService.getUserByEmail(email);
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+            }
+
+            // Генерация токена для сброса пароля
+            String resetToken = userService.createPasswordResetToken(user);
+
+            // Отправка email с ссылкой на сброс пароля
+            userService.sendPasswordResetEmail(user, resetToken);
+
+            return ResponseEntity.ok("Password reset link sent to your email");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error sending reset link");
+        }
+    }
+
+    // Сброс пароля
+    @PutMapping("/reset_password")
+    public ResponseEntity<String> resetPassword(@RequestParam String token, @RequestParam String newPassword) {
+        try {
+            User user = userService.findUserByPasswordResetToken(token);
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid or expired token");
+            }
+
+            // Хэшируем новый пароль
+            String encodedPassword = passwordEncoder.encode(newPassword);
+            user.setPassword(encodedPassword);
+            userService.restorePassword(user);
+
+            return ResponseEntity.ok("Password successfully reset");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error resetting password");
+        }
     }
 
     // Подтверждение email
@@ -119,15 +152,15 @@ public class UserController {
         }
     }
 
-    // Обновление пароля (пример)
-    @PutMapping("/update_password")
-    public ResponseEntity<String> updatePassword(@RequestParam String newPassword, Authentication authentication) {
-        User user = (User) authentication.getPrincipal();
-        String encodedPassword = passwordEncoder.encode(newPassword);  // Хэшируем новый пароль
-        user.setPassword(encodedPassword);  // Обновляем пароль пользователя
-        userService.restorePassword(user);  // Сохраняем изменения в базе данных
-        return ResponseEntity.ok("Password successfully updated.");
-    }
+//    // Обновление пароля
+//    @PutMapping("/updatepassword")
+//    public ResponseEntity<String> updatePassword(@RequestBody String newPassword, Authentication authentication) {
+//        User user = (User) authentication.getPrincipal();
+//        String encodedPassword = passwordEncoder.encode(newPassword);  // Хэшируем новый пароль
+//        user.setPassword(encodedPassword);  // Обновляем пароль пользователя
+//        userService.restorePassword(user);  // Сохраняем изменения в базе данных
+//        return ResponseEntity.ok("Password successfully updated.");
+//    }
 
     // Получить всех пользователей
     @GetMapping

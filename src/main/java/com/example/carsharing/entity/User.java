@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 
+
 @Entity
 @Setter
 @Getter
@@ -24,7 +25,7 @@ public class User implements UserDetails {
     private String driverLicense;
     private String phone;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Role role;
 
     @Enumerated(EnumType.STRING)
@@ -32,6 +33,13 @@ public class User implements UserDetails {
 
     private String confirmationToken;
     private boolean isEmailConfirmed = false;
+
+    // Поля для восстановления пароля
+    private String passwordResetToken;
+    @Column(name = "password_reset_token_expiration", nullable = false)
+    private long passwordResetTokenExpiration;
+
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
