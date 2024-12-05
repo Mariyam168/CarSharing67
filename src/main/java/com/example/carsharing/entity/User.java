@@ -25,7 +25,8 @@ public class User implements UserDetails {
     private String driverLicense;
     private String phone;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
+    @JoinColumn(name = "role_id")
     private Role role;
 
     @Enumerated(EnumType.STRING)
@@ -36,7 +37,7 @@ public class User implements UserDetails {
 
     // Поля для восстановления пароля
     private String passwordResetToken;
-    @Column(name = "password_reset_token_expiration", nullable = false)
+    @Column(name = "password_reset_token_expiration")
     private long passwordResetTokenExpiration;
 
 
