@@ -147,7 +147,7 @@ public class UserService implements UserDetailsService {
     }
 
     public void sendPasswordResetEmail(User user, String token) {
-        String resetLink = "http://localhost:8080/users/reset_password?token=" + token;
+        String resetLink = "http://localhost:3000/reset_password?token=" + token;
         emailService.sendPasswordResetEmail(user.getEmail(), resetLink);
     }
 
