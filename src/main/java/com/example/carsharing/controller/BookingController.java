@@ -2,6 +2,7 @@ package com.example.carsharing.controller;
 
 import com.example.carsharing.dto.BookingIdRequest;
 import com.example.carsharing.dto.BookingRequest;
+import com.example.carsharing.dto.UserBookingDto;
 import com.example.carsharing.entity.Booking;
 import com.example.carsharing.service.BookingService;
 import org.springframework.http.ResponseEntity;
@@ -51,6 +52,16 @@ public class BookingController {
         List<Booking> bookings = bookingService.getAllBookings();
         return ResponseEntity.ok(bookings);
     }
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<UserBookingDto>> getUserBookings(@PathVariable Long userId) {
+        try {
+            List<UserBookingDto> userBookings = bookingService.getUserBookings(userId);
+            return ResponseEntity.ok(userBookings);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
 
 
 }

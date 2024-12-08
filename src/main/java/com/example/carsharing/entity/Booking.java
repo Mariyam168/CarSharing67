@@ -24,6 +24,7 @@ public class Booking {
     private Car car;
     private LocalDate startDate;
     private LocalDate endDate;
+    @Enumerated(EnumType.STRING)
     private BookingStatus status;
     private BigDecimal advancePayment;
     private BigDecimal totalPrice;

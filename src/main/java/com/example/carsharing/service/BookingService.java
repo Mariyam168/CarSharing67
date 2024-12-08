@@ -1,5 +1,6 @@
 package com.example.carsharing.service;
 
+import com.example.carsharing.dto.UserBookingDto;
 import com.example.carsharing.entity.Booking;
 import com.example.carsharing.entity.Car;
 import com.example.carsharing.entity.User;
@@ -14,6 +15,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class BookingService {
@@ -95,6 +97,27 @@ public class BookingService {
     }
     public List<Booking> getAllBookings() {
         return bookingRepository.findAll();
+    }
+
+    public List<UserBookingDto> getUserBookings(Long userId) {
+        List<Booking> bookings = bookingRepository.findByUserId(userId);
+
+        if (bookings.isEmpty()) {
+            throw new IllegalArgumentException("У пользователя с ID " + userId + " нет бронирований.");
+        }
+
+        return bookings.stream().map(booking -> {
+            UserBookingDto dto = new UserBookingDto();
+            dto.setBookingId(booking.getId());
+            dto.setStartDate(booking.getStartDate());
+            dto.setEndDate(booking.getEndDate());
+            dto.setStatus(booking.getStatus());
+            dto.setTotalPrice(booking.getTotalPrice());
+            dto.setAdvancePayment(booking.getAdvancePayment());
+            dto.setCarMake(booking.getCar().getMake());
+            dto.setCarModel(booking.getCar().getModel());
+            return dto;
+        }).collect(Collectors.toList());
     }
 
 
