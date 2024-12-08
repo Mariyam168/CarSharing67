@@ -137,4 +137,30 @@ public class CarController {
         return car.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+    @PatchMapping("/{id}")
+    public ResponseEntity<Car> updateCar(
+            @PathVariable Long id,
+            @RequestParam(required = false) String make,
+            @RequestParam(required = false) String model,
+            @RequestParam(required = false) String tip,
+            @RequestParam(required = false) String year,
+            @RequestParam(required = false) String rule,
+            @RequestParam(required = false) String licensePlate,
+            @RequestParam(required = false) CarStatus carStatus,
+            @RequestParam(required = false) Integer volume,
+            @RequestParam(required = false) Double probeg,
+            @RequestParam(required = false) String color,
+            @RequestParam(required = false) BigDecimal price,
+            @RequestParam(required = false) MultipartFile image
+    ) {
+        try {
+            Car updatedCar = carService.updateCar(id, make, model, tip, year, rule, licensePlate, carStatus,
+                    volume, probeg, color, price, image);
+            return ResponseEntity.ok(updatedCar);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        } catch (IOException e) {
+            return ResponseEntity.status(500).body(null); // Ошибка при загрузке файла
+        }
+    }
 }

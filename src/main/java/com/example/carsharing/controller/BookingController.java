@@ -61,7 +61,4 @@ public class BookingController {
             return ResponseEntity.badRequest().build();
         }
     }
-
-
-
 }
