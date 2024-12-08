@@ -1,5 +1,6 @@
 package com.example.carsharing.controller;
 
+import com.example.carsharing.dto.BookingIdRequest;
 import com.example.carsharing.dto.BookingRequest;
 import com.example.carsharing.entity.Booking;
 import com.example.carsharing.service.BookingService;
@@ -7,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/bookings")
@@ -35,4 +37,20 @@ public class BookingController {
             return ResponseEntity.badRequest().body(null);
         }
     }
+    @PutMapping("/confirmed")
+    public ResponseEntity<Booking> markBookingAsCompleted(@RequestBody BookingIdRequest bookingIdRequest) {
+        try {
+            Booking updatedBooking = bookingService.markBookingAsCompleted(bookingIdRequest.getBookingId());
+            return ResponseEntity.ok(updatedBooking);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
+    @GetMapping
+    public ResponseEntity<List<Booking>> getAllBookings() {
+        List<Booking> bookings = bookingService.getAllBookings();
+        return ResponseEntity.ok(bookings);
+    }
+
+
 }

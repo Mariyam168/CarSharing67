@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 @Service
 public class BookingService {
@@ -75,4 +76,27 @@ public class BookingService {
 
         return booking;
     }
+
+    public Booking markBookingAsCompleted(Long bookingId) {
+        Booking booking = bookingRepository.findById(bookingId).orElseThrow(
+                () -> new IllegalArgumentException("Бронирование с ID " + bookingId + " не найдено.")
+        );
+
+        if (booking.getStatus() == BookingStatus.CONFIRMED) {
+            throw new IllegalArgumentException("Бронирование уже имеет статус CONFIRMED.");
+        }
+
+        booking.setStatus(BookingStatus.CONFIRMED);
+        bookingRepository.save(booking);
+
+        System.out.println("Бронирование с ID " + bookingId + " отмечено как CONFIRMED.");
+
+        return booking;
+    }
+    public List<Booking> getAllBookings() {
+        return bookingRepository.findAll();
+    }
+
+
+
 }
