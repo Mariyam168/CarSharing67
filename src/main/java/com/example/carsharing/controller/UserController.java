@@ -8,15 +8,21 @@ import com.example.carsharing.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 @RestController
@@ -168,4 +174,37 @@ public class UserController {
         List<User> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }
+
+    @PostMapping("/{userId}/avatar/upload")
+    public ResponseEntity<String> uploadAvatar(@PathVariable Long userId, @RequestParam("file") MultipartFile file) {
+        try {
+            userService.saveAvatar(userId, file);
+            return ResponseEntity.ok("Аватар успешно загружен");
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка загрузки аватара");
+        }
+    }
+    @GetMapping("/{userId}/avatar")
+    public ResponseEntity<Resource> getAvatar(@PathVariable Long userId) throws IOException {
+        String avatarPath = userService.getAvatarPath(userId);
+
+        if (avatarPath == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
+        // Находим файл по сохраненному пути
+        Path filePath = Paths.get("src/main/resources/avatar/").resolve(avatarPath.replace("/avatar/", "")).normalize();
+        Resource resource = new UrlResource(filePath.toUri());
+
+        if (!resource.exists()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG) // Если используется PNG, замените на MediaType.IMAGE_PNG
+                .body(resource);
+    }
+
+
+
 }

@@ -16,7 +16,12 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -183,6 +188,34 @@ public class UserService implements UserDetailsService {
         return user;
     }
 
+    public void saveAvatar(Long userId, MultipartFile file) throws IOException {
+        // Абсолютный путь к папке avatar
+        String projectDir = System.getProperty("user.dir");
+        Path avatarDir = Paths.get(projectDir, "src/main/resources/avatar");
 
+        // Создаем папку, если она не существует
+        if (!Files.exists(avatarDir)) {
+            Files.createDirectories(avatarDir);
+        }
 
+        // Генерируем уникальное имя файла
+        String filename = "user_" + userId + "_" + file.getOriginalFilename();
+        Path filePath = avatarDir.resolve(filename);
+
+        // Сохраняем файл на диск
+        file.transferTo(filePath.toFile());
+
+        // Обновляем поле avatarPath в базе данных
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+
+        user.setAvatarPath("/avatar/" + filename); // Путь для доступа к аватарке
+        userRepository.save(user);
+    }
+
+    public String getAvatarPath(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+        return user.getAvatarPath();
+    }
 }

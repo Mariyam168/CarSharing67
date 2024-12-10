@@ -40,6 +40,8 @@ public class User implements UserDetails {
     @Column(name = "password_reset_token_expiration")
     private long passwordResetTokenExpiration=0;
 
+    private String avatarPath;
+
 
 
     @Override
