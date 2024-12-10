@@ -47,7 +47,6 @@ public class BookingController {
             return ResponseEntity.badRequest().body(null);
         }
     }
-
     @GetMapping
     public ResponseEntity<List<Booking>> getAllBookings() {
         List<Booking> bookings = bookingService.getAllBookings();
