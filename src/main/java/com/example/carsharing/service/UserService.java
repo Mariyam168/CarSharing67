@@ -198,9 +198,20 @@ public class UserService implements UserDetailsService {
             Files.createDirectories(avatarDir);
         }
 
-        // Генерируем уникальное имя файла
-        String filename = "user_" + userId + "_" + file.getOriginalFilename();
-        Path filePath = avatarDir.resolve(filename);
+        // Генерация уникального имени для файла, включая UUID для предотвращения конфликтов
+        String originalFileName = file.getOriginalFilename();
+        if (originalFileName == null) {
+            throw new IOException("File name is null");
+        }
+
+        // Кодирование имени файла, чтобы избежать проблем с символами
+        String safeFileName = originalFileName.replaceAll("[^a-zA-Z0-9.]", "_"); // заменяем небезопасные символы на "_"
+
+        // Создаем уникальное имя для файла
+        String uniqueFileName = UUID.randomUUID().toString() + "_" + safeFileName;
+
+        // Путь, по которому будет сохранен файл
+        Path filePath = avatarDir.resolve(uniqueFileName);
 
         // Сохраняем файл на диск
         file.transferTo(filePath.toFile());
@@ -209,7 +220,7 @@ public class UserService implements UserDetailsService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
 
-        user.setAvatarPath("/avatar/" + filename); // Путь для доступа к аватарке
+        user.setAvatarPath("/avatar/" + uniqueFileName); // Путь для доступа к аватарке
         userRepository.save(user);
     }
 
