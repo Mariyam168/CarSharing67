@@ -38,15 +38,16 @@ public class BookingController {
             return ResponseEntity.badRequest().body(null);
         }
     }
-    @PutMapping("/confirmed")
-    public ResponseEntity<Booking> markBookingAsCompleted(@RequestBody BookingIdRequest bookingIdRequest) {
+    @PutMapping("/confirmed/{bookingId}")
+    public ResponseEntity<Booking> markBookingAsCompleted(@PathVariable Long bookingId) {
         try {
-            Booking updatedBooking = bookingService.markBookingAsCompleted(bookingIdRequest.getBookingId());
+            Booking updatedBooking = bookingService.markBookingAsCompleted(bookingId);
             return ResponseEntity.ok(updatedBooking);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(null);
         }
     }
+
     @GetMapping
     public ResponseEntity<List<Booking>> getAllBookings() {
         List<Booking> bookings = bookingService.getAllBookings();
