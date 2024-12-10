@@ -2,6 +2,7 @@ package com.example.carsharing.controller;
 
 import com.example.carsharing.dto.LoginRequest;
 import com.example.carsharing.dto.LoginResponse;
+import com.example.carsharing.dto.UserUpdateRequest;
 import com.example.carsharing.entity.User;
 import com.example.carsharing.security.JwtUtil;
 import com.example.carsharing.service.UserService;
@@ -201,10 +202,18 @@ public class UserController {
         }
 
         return ResponseEntity.ok()
-                .contentType(MediaType.IMAGE_JPEG) // Если используется PNG, замените на MediaType.IMAGE_PNG
+                .contentType(MediaType.IMAGE_JPEG)
                 .body(resource);
     }
 
-
+    @PatchMapping("/{userId}")
+    public ResponseEntity<User> updateUser(@PathVariable Long userId, @RequestBody UserUpdateRequest updateRequest) {
+        try {
+            User updatedUser = userService.updateUserFields(userId, updateRequest);
+            return ResponseEntity.ok(updatedUser);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+    }
 
 }
