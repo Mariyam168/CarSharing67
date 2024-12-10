@@ -87,7 +87,6 @@ public class BookingService {
         if (booking.getStatus() == BookingStatus.CONFIRMED) {
             throw new IllegalArgumentException("Бронирование уже имеет статус CONFIRMED.");
         }
-
         booking.setStatus(BookingStatus.CONFIRMED);
         bookingRepository.save(booking);
 
