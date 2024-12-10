@@ -1,5 +1,6 @@
 package com.example.carsharing.service;
 
+import com.example.carsharing.dto.UserUpdateRequest;
 import com.example.carsharing.entity.PasswordResetToken;
 import com.example.carsharing.entity.Role;
 import com.example.carsharing.entity.User;
@@ -189,38 +190,30 @@ public class UserService implements UserDetailsService {
     }
 
     public void saveAvatar(Long userId, MultipartFile file) throws IOException {
-        // Абсолютный путь к папке avatar
         String projectDir = System.getProperty("user.dir");
         Path avatarDir = Paths.get(projectDir, "src/main/resources/avatar");
 
-        // Создаем папку, если она не существует
         if (!Files.exists(avatarDir)) {
             Files.createDirectories(avatarDir);
         }
 
-        // Генерация уникального имени для файла, включая UUID для предотвращения конфликтов
         String originalFileName = file.getOriginalFilename();
         if (originalFileName == null) {
             throw new IOException("File name is null");
         }
 
-        // Кодирование имени файла, чтобы избежать проблем с символами
-        String safeFileName = originalFileName.replaceAll("[^a-zA-Z0-9.]", "_"); // заменяем небезопасные символы на "_"
+        String safeFileName = originalFileName.replaceAll("[^a-zA-Z0-9.]", "_");
 
-        // Создаем уникальное имя для файла
         String uniqueFileName = UUID.randomUUID().toString() + "_" + safeFileName;
 
-        // Путь, по которому будет сохранен файл
         Path filePath = avatarDir.resolve(uniqueFileName);
 
-        // Сохраняем файл на диск
         file.transferTo(filePath.toFile());
 
-        // Обновляем поле avatarPath в базе данных
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
 
-        user.setAvatarPath("/avatar/" + uniqueFileName); // Путь для доступа к аватарке
+        user.setAvatarPath("/avatar/" + uniqueFileName);
         userRepository.save(user);
     }
 
@@ -229,4 +222,21 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
         return user.getAvatarPath();
     }
+    public User updateUserFields(Long userId, UserUpdateRequest updateRequest) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (updateRequest.getUsername() != null) {
+            user.setUsername(updateRequest.getUsername());
+        }
+        if (updateRequest.getPhone() != null) {
+            user.setPhone(updateRequest.getPhone());
+        }
+        if (updateRequest.getDriverLicense() != null) {
+            user.setDriverLicense(updateRequest.getDriverLicense());
+        }
+
+        return userRepository.save(user);
+    }
+
 }
