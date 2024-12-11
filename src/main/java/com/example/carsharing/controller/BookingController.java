@@ -1,6 +1,5 @@
 package com.example.carsharing.controller;
 
-import com.example.carsharing.dto.BookingIdRequest;
 import com.example.carsharing.dto.BookingRequest;
 import com.example.carsharing.dto.UserBookingDto;
 import com.example.carsharing.entity.Booking;
@@ -19,7 +18,6 @@ public class BookingController {
     public BookingController(BookingService bookingService) {
         this.bookingService = bookingService;
     }
-
 
     @PostMapping("/create")
     public ResponseEntity<Booking> createBooking(@RequestBody BookingRequest bookingRequest) {
