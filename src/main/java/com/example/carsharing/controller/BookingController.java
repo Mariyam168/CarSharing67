@@ -20,6 +20,7 @@ public class BookingController {
         this.bookingService = bookingService;
     }
 
+
     @PostMapping("/create")
     public ResponseEntity<Booking> createBooking(@RequestBody BookingRequest bookingRequest) {
         try {
