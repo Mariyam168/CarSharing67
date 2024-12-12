@@ -120,7 +120,7 @@ public class UserController {
             String resetToken = userService.createPasswordResetToken(user);
 
             // Отправка email с ссылкой на сброс пароля
-            userService.sendPasswordResetEmail(user, resetToken);
+                userService.sendPasswordResetEmail(user, resetToken);
 
             return ResponseEntity.ok("Password reset link sent to your email");
         } catch (Exception e) {
