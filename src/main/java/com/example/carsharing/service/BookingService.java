@@ -34,14 +34,26 @@ public class BookingService {
                 () -> new IllegalArgumentException("Пользователь с ID " + userId + " не найден.")
         );
 
+        List<Booking> overlappingBookings = bookingRepository.findOverlappingBookingsByUserId(userId, startDate, endDate);
+
+        if (!overlappingBookings.isEmpty()) {
+            boolean hasConfirmedBooking = overlappingBookings.stream()
+                    .anyMatch(booking -> booking.getStatus() == BookingStatus.CONFIRMED);
+            if (hasConfirmedBooking) {
+                throw new IllegalArgumentException("У вас уже есть подтвержденное бронирование на выбранные даты.");
+            }
+        }
+
         Car car = carRepository.findById(carId).orElseThrow(
                 () -> new IllegalArgumentException("Автомобиль с ID " + carId + " не найден.")
         );
 
+        // Проверка статуса машины
         if (car.getCarStatus() != CarStatus.AVAILABLE) {
-            throw new IllegalArgumentException("Автомобиль с ID " + carId + " недоступен для бронирования.");
+            throw new IllegalArgumentException("Автомобиль уже забронирован и недоступен.");
         }
 
+        // Проверка дат
         LocalDate currentDate = LocalDate.now();
         if (startDate == null || endDate == null) {
             throw new IllegalArgumentException("Дата начала и дата окончания не могут быть пустыми.");
@@ -54,10 +66,6 @@ public class BookingService {
         }
 
         long numberOfDays = ChronoUnit.DAYS.between(startDate, endDate);
-        if (numberOfDays <= 0) {
-            throw new IllegalArgumentException("Продолжительность бронирования должна быть хотя бы 1 день.");
-        }
-
         BigDecimal totalPrice = car.getPrice().multiply(BigDecimal.valueOf(numberOfDays));
         BigDecimal advancePayment = totalPrice.multiply(BigDecimal.valueOf(0.2)); // 20% предоплаты
 
@@ -69,13 +77,10 @@ public class BookingService {
         booking.setStatus(BookingStatus.PENDING);
         booking.setTotalPrice(totalPrice);
         booking.setAdvancePayment(advancePayment);
+        car.setCarStatus(CarStatus.RESERVED);
+        carRepository.save(car);
 
         bookingRepository.save(booking);
-
-        System.out.println("Бронирование создано для пользователя ID: " + userId + " и автомобиля ID: " + car.getId());
-        System.out.println("Начало аренды: " + startDate + ", окончание аренды: " + endDate);
-        System.out.println("Общая стоимость: " + totalPrice + ", предоплата: " + advancePayment);
-
         return booking;
     }
 
@@ -105,7 +110,20 @@ public class BookingService {
             throw new IllegalArgumentException("У пользователя с ID " + userId + " нет бронирований.");
         }
 
+        LocalDate currentDate = LocalDate.now();
+
         return bookings.stream().map(booking -> {
+            Car car = booking.getCar();
+
+            if (booking.getEndDate().isBefore(currentDate) && car.getCarStatus() != CarStatus.AVAILABLE) {
+                car.setCarStatus(CarStatus.AVAILABLE);
+                carRepository.save(car);
+            }
+            if (!booking.getStartDate().isAfter(currentDate) && !booking.getEndDate().isBefore(currentDate)
+                    && car.getCarStatus() != CarStatus.RENTED) {
+                car.setCarStatus(CarStatus.RENTED);
+                carRepository.save(car);
+            }
             UserBookingDto dto = new UserBookingDto();
             dto.setBookingId(booking.getId());
             dto.setStartDate(booking.getStartDate());
@@ -113,12 +131,10 @@ public class BookingService {
             dto.setStatus(booking.getStatus());
             dto.setTotalPrice(booking.getTotalPrice());
             dto.setAdvancePayment(booking.getAdvancePayment());
-            dto.setCarMake(booking.getCar().getMake());
-            dto.setCarModel(booking.getCar().getModel());
+            dto.setCarMake(car.getMake());
+            dto.setCarModel(car.getModel());
             return dto;
         }).collect(Collectors.toList());
     }
-
-
 
 }
