@@ -6,6 +6,7 @@ import com.example.carsharing.service.CarService;
 
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -162,5 +164,12 @@ public class CarController {
         } catch (IOException e) {
             return ResponseEntity.status(500).body(null); // Ошибка при загрузке файла
         }
+    }
+    @GetMapping("/available")
+    public List<Car> getAvailableCars(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+    ) {
+        return carService.findAvailableCars(startDate, endDate);
     }
 }

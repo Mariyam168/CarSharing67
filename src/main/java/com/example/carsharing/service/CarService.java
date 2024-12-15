@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -124,6 +125,14 @@ public class CarService {
             throw new RuntimeException("Car not found with ID: " + id);
         }
     }
-
+    public List<Car> findAvailableCars(LocalDate startDate, LocalDate endDate) {
+        if (startDate == null || endDate == null) {
+            throw new IllegalArgumentException("Дата начала и окончания не могут быть пустыми.");
+        }
+        if (endDate.isBefore(startDate)) {
+            throw new IllegalArgumentException("Дата окончания не может быть раньше даты начала.");
+        }
+        return carRepository.findAvailableCarsByDates(startDate, endDate);
+    }
 
 }
