@@ -48,9 +48,11 @@ public class BookingService {
                 () -> new IllegalArgumentException("Автомобиль с ID " + carId + " не найден.")
         );
 
-        // Проверка статуса машины
-        if (car.getCarStatus() != CarStatus.AVAILABLE) {
-            throw new IllegalArgumentException("Автомобиль уже забронирован и недоступен.");
+        // Проверка пересечения бронирований для этой машины
+        List<Booking> overlappingCarBookings = bookingRepository.findOverlappingBookingsByCarId(carId, startDate, endDate);
+
+        if (!overlappingCarBookings.isEmpty()) {
+            throw new IllegalArgumentException("Данный автомобиль уже забронирован на указанные даты.");
         }
 
         // Проверка дат
@@ -88,7 +90,21 @@ public class BookingService {
         Booking booking = bookingRepository.findById(bookingId).orElseThrow(
                 () -> new IllegalArgumentException("Бронирование с ID " + bookingId + " не найдено.")
         );
+        Long userId = booking.getUser().getId();
+        LocalDate startDate = booking.getStartDate();
+        LocalDate endDate = booking.getEndDate();
 
+        List<Booking> overlappingBookings = bookingRepository.findOverlappingBookingsByUserIdAndExcludeBooking(
+                userId, bookingId, startDate, endDate
+        );
+
+        if (!overlappingBookings.isEmpty()) {
+            throw new IllegalArgumentException("Пользователь уже имеет бронирование на пересекающиеся даты для другой машины.");
+        }
+
+        if (booking.getStatus() == BookingStatus.CONFIRMED) {
+            throw new IllegalArgumentException("Бронирование уже имеет статус CONFIRMED.");
+        }
         booking.setStatus(BookingStatus.CONFIRMED);
         bookingRepository.save(booking);
 
