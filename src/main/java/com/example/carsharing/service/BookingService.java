@@ -88,6 +88,17 @@ public class BookingService {
         Booking booking = bookingRepository.findById(bookingId).orElseThrow(
                 () -> new IllegalArgumentException("Бронирование с ID " + bookingId + " не найдено.")
         );
+        Long userId = booking.getUser().getId();
+        LocalDate startDate = booking.getStartDate();
+        LocalDate endDate = booking.getEndDate();
+
+        List<Booking> overlappingBookings = bookingRepository.findOverlappingBookingsByUserIdAndExcludeBooking(
+                userId, bookingId, startDate, endDate
+        );
+
+        if (!overlappingBookings.isEmpty()) {
+            throw new IllegalArgumentException("Пользователь уже имеет бронирование на пересекающиеся даты для другой машины.");
+        }
 
         if (booking.getStatus() == BookingStatus.CONFIRMED) {
             throw new IllegalArgumentException("Бронирование уже имеет статус CONFIRMED.");
