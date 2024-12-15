@@ -34,14 +34,23 @@ public class BookingService {
                 () -> new IllegalArgumentException("Пользователь с ID " + userId + " не найден.")
         );
 
+        // Проверка на активное бронирование у пользователя
+        boolean hasActiveBooking = bookingRepository.existsByUserIdAndStatusIn(userId,
+                List.of(BookingStatus.PENDING, BookingStatus.CONFIRMED));
+        if (hasActiveBooking) {
+            throw new IllegalArgumentException("У пользователя уже есть активное бронирование. Завершите текущее, чтобы создать новое.");
+        }
+
         Car car = carRepository.findById(carId).orElseThrow(
                 () -> new IllegalArgumentException("Автомобиль с ID " + carId + " не найден.")
         );
 
+        // Проверка статуса машины
         if (car.getCarStatus() != CarStatus.AVAILABLE) {
-            throw new IllegalArgumentException("Автомобиль с ID " + carId + " недоступен для бронирования.");
+            throw new IllegalArgumentException("Автомобиль уже забронирован и недоступен.");
         }
 
+        // Проверка дат
         LocalDate currentDate = LocalDate.now();
         if (startDate == null || endDate == null) {
             throw new IllegalArgumentException("Дата начала и дата окончания не могут быть пустыми.");
@@ -54,13 +63,10 @@ public class BookingService {
         }
 
         long numberOfDays = ChronoUnit.DAYS.between(startDate, endDate);
-        if (numberOfDays <= 0) {
-            throw new IllegalArgumentException("Продолжительность бронирования должна быть хотя бы 1 день.");
-        }
-
         BigDecimal totalPrice = car.getPrice().multiply(BigDecimal.valueOf(numberOfDays));
         BigDecimal advancePayment = totalPrice.multiply(BigDecimal.valueOf(0.2)); // 20% предоплаты
 
+        // Создание и сохранение бронирования
         Booking booking = new Booking();
         booking.setUser(user);
         booking.setCar(car);
@@ -70,14 +76,14 @@ public class BookingService {
         booking.setTotalPrice(totalPrice);
         booking.setAdvancePayment(advancePayment);
 
+        // Обновление статуса машины на BOOKED
+        car.setCarStatus(CarStatus.RESERVED);
+        carRepository.save(car);
+
         bookingRepository.save(booking);
-
-        System.out.println("Бронирование создано для пользователя ID: " + userId + " и автомобиля ID: " + car.getId());
-        System.out.println("Начало аренды: " + startDate + ", окончание аренды: " + endDate);
-        System.out.println("Общая стоимость: " + totalPrice + ", предоплата: " + advancePayment);
-
         return booking;
     }
+
 
     public Booking markBookingAsCompleted(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId).orElseThrow(
