@@ -1,5 +1,6 @@
 package com.example.carsharing.controller;
 
+import com.example.carsharing.dto.DateRangeRequest;
 import com.example.carsharing.entity.Car;
 import com.example.carsharing.enums.CarStatus;
 import com.example.carsharing.service.CarService;
@@ -166,11 +167,9 @@ public class CarController {
         }
     }
 
-    @GetMapping("/sort")
-    public List<Car> getAvailableCars(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
-    ) {
-        return carService.findAvailableCars(startDate, endDate);
+    @PostMapping("/sort")
+    public List<Car> getAvailableCars(@RequestBody DateRangeRequest dateRangeRequest) {
+        return carService.findAvailableCars(dateRangeRequest.getStartDate(), dateRangeRequest.getEndDate());
     }
+
 }
