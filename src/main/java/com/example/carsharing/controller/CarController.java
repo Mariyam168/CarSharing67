@@ -165,7 +165,7 @@ public class CarController {
             return ResponseEntity.status(500).body(null); // Ошибка при загрузке файла
         }
     }
-    @GetMapping("/available")
+    @GetMapping("/sort")
     public List<Car> getAvailableCars(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
