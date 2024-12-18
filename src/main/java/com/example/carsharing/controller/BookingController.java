@@ -60,4 +60,9 @@ public class BookingController {
             return ResponseEntity.badRequest().build();
         }
     }
+    @DeleteMapping("/{bookingId}")
+    public ResponseEntity<Void> deleteBooking(@PathVariable Long bookingId) {
+        bookingService.deleteBookingById(bookingId);
+        return ResponseEntity.noContent().build();
+    }
 }
