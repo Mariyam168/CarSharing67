@@ -1,5 +1,6 @@
 package com.example.carsharing.service;
 
+import com.example.carsharing.dto.UserRegisterDto;
 import com.example.carsharing.dto.UserUpdateRequest;
 import com.example.carsharing.entity.PasswordResetToken;
 import com.example.carsharing.entity.Role;
@@ -46,8 +47,8 @@ public class UserService implements UserDetailsService {
     @Autowired
     private EmailService emailService;
 
-    public User registerUser(String username, String email, String password, String driverLicense, String phone) {
-        if (userRepository.existsByEmail(email)) {
+    public User registerUser(UserRegisterDto userRegisterDto) {
+        if (userRepository.existsByEmail(userRegisterDto.getEmail())) {
             throw new RuntimeException("Email already exists");
         }
 
@@ -60,26 +61,26 @@ public class UserService implements UserDetailsService {
         String confirmationToken = UUID.randomUUID().toString();
 
         User newUser = new User();
-        newUser.setUsername(username);
-        newUser.setEmail(email);
-        newUser.setPassword(passwordEncoder.encode(password));
-        newUser.setDriverLicense(driverLicense);
-        newUser.setPhone(phone);
+        newUser.setUsername(userRegisterDto.getUsername());
+        newUser.setEmail(userRegisterDto.getEmail());
+        newUser.setPassword(passwordEncoder.encode(userRegisterDto.getPassword()));
+        newUser.setDriverLicense(userRegisterDto.getDriverLicense());
+        newUser.setPhone(userRegisterDto.getPhone());
         newUser.setRole(userRole);
         newUser.setUserStatus(UserStatus.PENDING);
         newUser.setConfirmationToken(confirmationToken);
 
         userRepository.save(newUser);
 
+        // Отправка письма для подтверждения email
         String subject = "Confirm your email";
         String confirmationUrl = "http://localhost:8080/users/confirm?token=" + confirmationToken;
-        String text = "Dear " + username + ",\n\nPlease confirm your email by clicking the link below:\n" + confirmationUrl;
+        String text = "Dear " + userRegisterDto.getUsername() + ",\n\nPlease confirm your email by clicking the link below:\n" + confirmationUrl;
 
-        emailService.sendEmail(email, subject, text);
+        emailService.sendEmail(userRegisterDto.getEmail(), subject, text);
 
         return newUser;
     }
-
 
     public boolean confirmEmail(String token) {
         User user = userRepository.findByConfirmationToken(token).orElse(null);
