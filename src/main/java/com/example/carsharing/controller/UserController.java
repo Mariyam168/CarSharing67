@@ -27,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -199,4 +200,16 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to update user");
         }
     }
+    @PostMapping("/registerUser")
+    public ResponseEntity<User> registerUser(@RequestBody @Valid UserRegisterDto userRegisterDto) {
+        User newUser = userService.register(userRegisterDto);
+        return ResponseEntity.ok(newUser);
+    }
+
+    @GetMapping("/admins-and-managers")
+    public List<User> getAdminsAndManagers() {
+        List<String> roles = Arrays.asList("ADMIN", "MANAGER");
+        return userService.getUsersByRoles(roles);
+    }
+
 }

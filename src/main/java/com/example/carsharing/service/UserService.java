@@ -28,6 +28,7 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -245,5 +246,42 @@ public class UserService implements UserDetailsService {
 
         return userRepository.save(user);
     }
+    public User register(UserRegisterDto userRegisterDto) {
+        if (userRepository.existsByEmail(userRegisterDto.getEmail())) {
+            throw new RuntimeException("Пользователь с таким email уже существует.");
+        }
+
+        Role role = roleRepository.findById(userRegisterDto.getRoleId())
+                .orElseThrow(() -> new RuntimeException("Роль с ID " + userRegisterDto.getRoleId() + " не найдена."));
+
+        User newUser = new User();
+        newUser.setUsername(userRegisterDto.getUsername());
+        newUser.setEmail(userRegisterDto.getEmail());
+        newUser.setPassword(passwordEncoder.encode(userRegisterDto.getPassword()));
+        newUser.setDriverLicense(userRegisterDto.getDriverLicense());
+        newUser.setPhone(userRegisterDto.getPhone());
+        newUser.setRole(role);
+        newUser.setUserStatus(UserStatus.ACTIVE); // Новый пользователь активен сразу
+
+        userRepository.save(newUser);
+
+        logger.info("Пользователь с ролью {} и email {} успешно зарегистрирован.", role.getName(), userRegisterDto.getEmail());
+        return newUser;
+    }
+
+    public List<User> getUsersByRoles(List<String> roleNames) {
+        // Получаем роли по именам
+        List<Role> roles = roleRepository.findByNameIn(roleNames);
+
+        if (roles.isEmpty()) {
+            throw new RuntimeException("Роли не найдены: " + roleNames);
+        }
+
+        // Возвращаем пользователей, у которых роли соответствуют заданным
+        return userRepository.findAll().stream()
+                .filter(user -> roles.contains(user.getRole()))
+                .collect(Collectors.toList());
+    }
+
 
 }
