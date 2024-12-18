@@ -5,6 +5,7 @@ import com.example.carsharing.dto.LoginResponse;
 import com.example.carsharing.dto.UserRegisterDto;
 import com.example.carsharing.dto.UserUpdateRequest;
 import com.example.carsharing.entity.User;
+import com.example.carsharing.enums.UserStatus;
 import com.example.carsharing.security.JwtUtil;
 import com.example.carsharing.service.UserService;
 import jakarta.validation.Valid;
@@ -217,6 +218,20 @@ public class UserController {
         }
         return ResponseEntity.ok(managers);
     }
+    @PutMapping("/users/{id}/status")
+    public ResponseEntity<User> updateUserStatus(
+            @PathVariable Long id,
+            @RequestParam String status) {
+        try {
+            // Парсим строку в enum
+            UserStatus userStatus = UserStatus.valueOf(status.toUpperCase());
+            User updatedUser = userService.updateUserStatus(id, userStatus);
+            return ResponseEntity.ok(updatedUser);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
+
 
 
 }

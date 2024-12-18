@@ -102,6 +102,7 @@ public class UserService implements UserDetailsService {
         user.setUserStatus(newStatus);
         return userRepository.save(user);
     }
+
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
