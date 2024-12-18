@@ -1,5 +1,6 @@
 package com.example.carsharing.service;
 
+import com.example.carsharing.controller.WebSocketController;
 import com.example.carsharing.dto.UserRegisterDto;
 import com.example.carsharing.dto.UserUpdateRequest;
 import com.example.carsharing.entity.PasswordResetToken;
@@ -37,19 +38,25 @@ public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final WebSocketController webSocketController;
 
-    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, WebSocketController webSocketController) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.webSocketController = webSocketController;
     }
 
     @Autowired
     private EmailService emailService;
 
     public User registerUser(UserRegisterDto userRegisterDto) {
+        webSocketController.sendMessage("Регистрация пользователя с email: " + userRegisterDto.getEmail());
+
         if (userRepository.existsByEmail(userRegisterDto.getEmail())) {
-            throw new RuntimeException("Email already exists");
+            String errorMessage = "Пользователь с таким email уже существует.";
+            webSocketController.sendMessage(errorMessage);
+            throw new RuntimeException(errorMessage);
         }
 
         Role userRole = roleRepository.findByName("USER").orElseGet(() -> {
@@ -72,64 +79,91 @@ public class UserService implements UserDetailsService {
 
         userRepository.save(newUser);
 
-        // Отправка письма для подтверждения email
-        String subject = "Confirm your email";
+        String subject = "Подтверждение email";
         String confirmationUrl = "http://localhost:8080/users/confirm?token=" + confirmationToken;
-        String text = "Dear " + userRegisterDto.getUsername() + ",\n\nPlease confirm your email by clicking the link below:\n" + confirmationUrl;
+        String text = "Здравствуйте, " + userRegisterDto.getUsername() + "!\n\nПодтвердите ваш email по ссылке:\n" + confirmationUrl;
 
         emailService.sendEmail(userRegisterDto.getEmail(), subject, text);
 
+        webSocketController.sendMessage("Пользователь успешно зарегистрирован. Для активации аккаунта подтвердите email.");
         return newUser;
     }
 
+
     public boolean confirmEmail(String token) {
+        webSocketController.sendMessage("Попытка подтверждения email с токеном: " + token);
+
         User user = userRepository.findByConfirmationToken(token).orElse(null);
         if (user != null) {
             user.setUserStatus(UserStatus.ACTIVE);
             user.setConfirmationToken(null);
             userRepository.save(user);
+
+            webSocketController.sendMessage("Email успешно подтверждён.");
             return true;
         }
+
+        webSocketController.sendMessage("Неверный или просроченный токен подтверждения.");
         return false;
     }
 
     public User updateUserStatus(Long userId, UserStatus newStatus) {
+        webSocketController.sendMessage("Обновление статуса пользователя ID: " + userId + " на " + newStatus);
+
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+                .orElseThrow(() -> {
+                    String errorMessage = "Пользователь с ID " + userId + " не найден.";
+                    webSocketController.sendMessage(errorMessage);
+                    return new IllegalArgumentException(errorMessage);
+                });
+
         user.setUserStatus(newStatus);
-        return userRepository.save(user);
+        User updatedUser = userRepository.save(user);
+
+        webSocketController.sendMessage("Статус пользователя обновлён на " + newStatus);
+        return updatedUser;
     }
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
+
     public void restorePassword(User user) {
-        // Генерация токена для сброса пароля
+        webSocketController.sendMessage("Инициализация восстановления пароля для пользователя с email: " + user.getEmail());
+
         String resetToken = UUID.randomUUID().toString();
         user.setPasswordResetToken(resetToken);
-        user.setPasswordResetTokenExpiration(System.currentTimeMillis() + 3600000);  // Срок действия 1 час
+        user.setPasswordResetTokenExpiration(System.currentTimeMillis() + 3600000);
         userRepository.save(user);
 
         String url = "http://localhost:8080/users/reset_password?token=" + resetToken;
         emailService.sendEmail(user.getEmail(),
                 "Восстановление пароля",
-                "Перейдите по ссылке для восстановления пароля \n" + url);
+                "Перейдите по ссылке для восстановления пароля:\n" + url);
+
+        webSocketController.sendMessage("Ссылка для восстановления пароля отправлена на email: " + user.getEmail());
     }
+
 
     @Autowired
     private PasswordResetTokenRepository passwordResetTokenRepository;
     public boolean resetPassword(String token, String newPassword) {
+        webSocketController.sendMessage("Попытка сброса пароля с токеном: " + token);
+
         User user = userRepository.findByPasswordResetToken(token).orElse(null);
         if (user != null && user.getPasswordResetTokenExpiration() > System.currentTimeMillis()) {
-            // Токен действителен
-            user.setPassword(passwordEncoder.encode(newPassword)); // Хэшируем новый пароль
-            user.setPasswordResetToken(null); // Очищаем токен после использования
-            user.setPasswordResetTokenExpiration(0); // Очищаем срок действия токена
+            user.setPassword(passwordEncoder.encode(newPassword));
+            user.setPasswordResetToken(null);
+            user.setPasswordResetTokenExpiration(0);
             userRepository.save(user);
+
+            webSocketController.sendMessage("Пароль успешно сброшен.");
             return true;
         }
-        return false;  // Токен не найден или срок действия истек
+
+        webSocketController.sendMessage("Неверный или просроченный токен сброса пароля.");
+        return false;
     }
     public String createPasswordResetToken(User user) {
         // Генерируем токен
@@ -191,6 +225,8 @@ public class UserService implements UserDetailsService {
     }
 
     public void saveAvatar(Long userId, MultipartFile file) throws IOException {
+        webSocketController.sendMessage("Попытка загрузки аватара для пользователя ID: " + userId);
+
         String projectDir = System.getProperty("user.dir");
         Path avatarDir = Paths.get(projectDir, "src/main/resources/avatar");
 
@@ -200,22 +236,28 @@ public class UserService implements UserDetailsService {
 
         String originalFileName = file.getOriginalFilename();
         if (originalFileName == null) {
-            throw new IOException("File name is null");
+            String errorMessage = "Имя файла отсутствует.";
+            webSocketController.sendMessage(errorMessage);
+            throw new IOException(errorMessage);
         }
 
         String safeFileName = originalFileName.replaceAll("[^a-zA-Z0-9.]", "_");
-
         String uniqueFileName = UUID.randomUUID().toString() + "_" + safeFileName;
-
         Path filePath = avatarDir.resolve(uniqueFileName);
 
         file.transferTo(filePath.toFile());
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+                .orElseThrow(() -> {
+                    String errorMessage = "Пользователь с ID " + userId + " не найден.";
+                    webSocketController.sendMessage(errorMessage);
+                    return new RuntimeException(errorMessage);
+                });
 
         user.setAvatarPath("/avatar/" + uniqueFileName);
         userRepository.save(user);
+
+        webSocketController.sendMessage("Аватар успешно сохранён для пользователя ID: " + userId);
     }
 
     public String getAvatarPath(Long userId) {

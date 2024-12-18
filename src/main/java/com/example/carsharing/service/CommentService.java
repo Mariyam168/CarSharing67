@@ -1,5 +1,6 @@
 package com.example.carsharing.service;
 
+import com.example.carsharing.controller.WebSocketController;
 import com.example.carsharing.dto.CommentResponseDto;
 import com.example.carsharing.entity.Comment;
 import com.example.carsharing.entity.Car;
@@ -19,23 +20,38 @@ public class CommentService {
     private final CarRepository carRepository;
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
+    private final WebSocketController webSocketController;
 
-    public CommentService(CarRepository carRepository, UserRepository userRepository, CommentRepository commentRepository) {
+    public CommentService(CarRepository carRepository, UserRepository userRepository, CommentRepository commentRepository, WebSocketController webSocketController) {
         this.carRepository = carRepository;
         this.userRepository = userRepository;
         this.commentRepository = commentRepository;
+        this.webSocketController = webSocketController;
     }
 
     // Добавить комментарий
     public CommentResponseDto addComment(Long carId, Long userId, String content) {
+        webSocketController.sendMessage("Запрос на добавление комментария: Пользователь ID " + userId + " для автомобиля ID " + carId);
+
         if (content == null || content.trim().isEmpty()) {
-            throw new IllegalArgumentException("Comment content must not be empty");
+            String errorMessage = "Содержимое комментария не должно быть пустым.";
+            webSocketController.sendMessage(errorMessage);
+            throw new IllegalArgumentException(errorMessage);
         }
 
         Car car = carRepository.findById(carId)
-                .orElseThrow(() -> new ResourceNotFoundException("Car with ID " + carId + " not found"));
+                .orElseThrow(() -> {
+                    String errorMessage = "Автомобиль с ID " + carId + " не найден.";
+                    webSocketController.sendMessage(errorMessage);
+                    return new ResourceNotFoundException(errorMessage);
+                });
+
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User with ID " + userId + " not found"));
+                .orElseThrow(() -> {
+                    String errorMessage = "Пользователь с ID " + userId + " не найден.";
+                    webSocketController.sendMessage(errorMessage);
+                    return new ResourceNotFoundException(errorMessage);
+                });
 
         Comment comment = new Comment();
         comment.setCar(car);
@@ -49,6 +65,9 @@ public class CommentService {
         response.setContent(savedComment.getContent());
         response.setUserName(user.getUsername());
         response.setCarId(car.getId());
+
+        webSocketController.sendMessage("Комментарий успешно добавлен. " );
+
         return response;
     }
 

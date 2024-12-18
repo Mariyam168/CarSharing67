@@ -1,5 +1,6 @@
 package com.example.carsharing.service;
 
+import com.example.carsharing.controller.WebSocketController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;

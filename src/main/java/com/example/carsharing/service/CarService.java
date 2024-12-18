@@ -1,5 +1,6 @@
 package com.example.carsharing.service;
 
+import com.example.carsharing.controller.WebSocketController;
 import com.example.carsharing.entity.Car;
 import com.example.carsharing.enums.CarStatus;
 import com.example.carsharing.repository.CarRepository;
@@ -16,11 +17,13 @@ import java.util.Optional;
 public class CarService {
     private final CarRepository carRepository;
     private final FileUploadService fileUploadService;
+    private final WebSocketController webSocketController;
 
     // Исправлен конструктор: передаем только один экземпляр fileUploadService
-    public CarService(CarRepository carRepository, FileUploadService fileUploadService) {
+    public CarService(CarRepository carRepository, FileUploadService fileUploadService, WebSocketController webSocketController) {
         this.carRepository = carRepository;
         this.fileUploadService = fileUploadService;
+        this.webSocketController = webSocketController;
     }
 
     // Метод для сохранения автомобиля с изображением
@@ -126,13 +129,25 @@ public class CarService {
         }
     }
     public List<Car> findAvailableCars(LocalDate startDate, LocalDate endDate) {
+        webSocketController.sendMessage("Запрос на поиск доступных автомобилей с " + startDate + " по " + endDate);
+
         if (startDate == null || endDate == null) {
-            throw new IllegalArgumentException("Дата начала и окончания не могут быть пустыми.");
+            String errorMessage = "Дата начала и окончания не могут быть пустыми.";
+            webSocketController.sendMessage(errorMessage);
+            throw new IllegalArgumentException(errorMessage);
         }
+
         if (endDate.isBefore(startDate)) {
-            throw new IllegalArgumentException("Дата окончания не может быть раньше даты начала.");
+            String errorMessage = "Дата окончания не может быть раньше даты начала.";
+            webSocketController.sendMessage(errorMessage);
+            throw new IllegalArgumentException(errorMessage);
         }
-        return carRepository.findAvailableCarsByDates(startDate, endDate);
+
+        List<Car> availableCars = carRepository.findAvailableCarsByDates(startDate, endDate);
+        webSocketController.sendMessage("Найдено " + availableCars.size() + " доступных автомобилей на указанные даты.");
+
+        return availableCars;
     }
+
 
 }
