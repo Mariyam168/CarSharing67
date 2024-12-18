@@ -251,8 +251,15 @@ public class UserService implements UserDetailsService {
             throw new RuntimeException("Пользователь с таким email уже существует.");
         }
 
-        Role role = roleRepository.findById(userRegisterDto.getRoleId())
-                .orElseThrow(() -> new RuntimeException("Роль с ID " + userRegisterDto.getRoleId() + " не найдена."));
+        // Если ID роли не указано, присваиваем роль MANAGER по умолчанию
+        Role role;
+        if (userRegisterDto.getRoleId() == null) {
+            role = roleRepository.findByName("MANAGER")
+                    .orElseThrow(() -> new RuntimeException("Роль MANAGER не найдена."));
+        } else {
+            role = roleRepository.findById(userRegisterDto.getRoleId())
+                    .orElseThrow(() -> new RuntimeException("Роль с ID " + userRegisterDto.getRoleId() + " не найдена."));
+        }
 
         User newUser = new User();
         newUser.setUsername(userRegisterDto.getUsername());
@@ -268,6 +275,7 @@ public class UserService implements UserDetailsService {
         logger.info("Пользователь с ролью {} и email {} успешно зарегистрирован.", role.getName(), userRegisterDto.getEmail());
         return newUser;
     }
+
 
     public List<User> getUsersByRoles(List<String> roleNames) {
         // Получаем роли по именам

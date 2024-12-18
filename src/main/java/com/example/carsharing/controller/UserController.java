@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -206,10 +207,16 @@ public class UserController {
         return ResponseEntity.ok(newUser);
     }
 
-    @GetMapping("/admins-and-managers")
-    public List<User> getAdminsAndManagers() {
-        List<String> roles = Arrays.asList("ADMIN", "MANAGER");
-        return userService.getUsersByRoles(roles);
+    @GetMapping("/managers")
+    public ResponseEntity<List<User>> getManagers() {
+        List<String> roles = Collections.singletonList("MANAGER");
+        List<User> managers = userService.getUsersByRoles(roles);
+
+        if (managers.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(managers);
     }
+
 
 }
