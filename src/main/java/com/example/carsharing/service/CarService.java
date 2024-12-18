@@ -128,26 +128,20 @@ public class CarService {
             throw new RuntimeException("Car not found with ID: " + id);
         }
     }
+
     public List<Car> findAvailableCars(LocalDate startDate, LocalDate endDate) {
-        webSocketController.sendMessage("Запрос на поиск доступных автомобилей с " + startDate + " по " + endDate);
-
+        // Проверка входных данных
         if (startDate == null || endDate == null) {
-            String errorMessage = "Дата начала и окончания не могут быть пустыми.";
-            webSocketController.sendMessage(errorMessage);
-            throw new IllegalArgumentException(errorMessage);
+            throw new IllegalArgumentException("Укажите даты начала и окончания.");
         }
-
         if (endDate.isBefore(startDate)) {
-            String errorMessage = "Дата окончания не может быть раньше даты начала.";
-            webSocketController.sendMessage(errorMessage);
-            throw new IllegalArgumentException(errorMessage);
+            throw new IllegalArgumentException("Дата окончания не может быть раньше даты начала.");
         }
 
-        List<Car> availableCars = carRepository.findAvailableCarsByDates(startDate, endDate);
-        webSocketController.sendMessage("Найдено " + availableCars.size() + " доступных автомобилей на указанные даты.");
-
-        return availableCars;
+        // Поиск доступных автомобилей
+        return carRepository.findAvailableCarsByDates(startDate, endDate);
     }
+
 
 
 }

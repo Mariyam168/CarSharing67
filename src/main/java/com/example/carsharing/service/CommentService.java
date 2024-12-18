@@ -31,27 +31,15 @@ public class CommentService {
 
     // Добавить комментарий
     public CommentResponseDto addComment(Long carId, Long userId, String content) {
-        webSocketController.sendMessage("Запрос на добавление комментария: Пользователь ID " + userId + " для автомобиля ID " + carId);
-
         if (content == null || content.trim().isEmpty()) {
-            String errorMessage = "Содержимое комментария не должно быть пустым.";
-            webSocketController.sendMessage(errorMessage);
-            throw new IllegalArgumentException(errorMessage);
+            throw new IllegalArgumentException("Содержимое комментария не должно быть пустым.");
         }
 
         Car car = carRepository.findById(carId)
-                .orElseThrow(() -> {
-                    String errorMessage = "Автомобиль с ID " + carId + " не найден.";
-                    webSocketController.sendMessage(errorMessage);
-                    return new ResourceNotFoundException(errorMessage);
-                });
+                .orElseThrow(() -> new ResourceNotFoundException("Автомобиль с ID " + carId + " не найден."));
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> {
-                    String errorMessage = "Пользователь с ID " + userId + " не найден.";
-                    webSocketController.sendMessage(errorMessage);
-                    return new ResourceNotFoundException(errorMessage);
-                });
+                .orElseThrow(() -> new ResourceNotFoundException("Пользователь с ID " + userId + " не найден."));
 
         Comment comment = new Comment();
         comment.setCar(car);
@@ -65,8 +53,6 @@ public class CommentService {
         response.setContent(savedComment.getContent());
         response.setUserName(user.getUsername());
         response.setCarId(car.getId());
-
-        webSocketController.sendMessage("Комментарий успешно добавлен. " );
 
         return response;
     }

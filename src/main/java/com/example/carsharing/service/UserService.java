@@ -51,12 +51,8 @@ public class UserService implements UserDetailsService {
     private EmailService emailService;
 
     public User registerUser(UserRegisterDto userRegisterDto) {
-        webSocketController.sendMessage("Регистрация пользователя с email: " + userRegisterDto.getEmail());
-
         if (userRepository.existsByEmail(userRegisterDto.getEmail())) {
-            String errorMessage = "Пользователь с таким email уже существует.";
-            webSocketController.sendMessage(errorMessage);
-            throw new RuntimeException(errorMessage);
+            throw new RuntimeException("Пользователь с таким email уже существует.");
         }
 
         Role userRole = roleRepository.findByName("USER").orElseGet(() -> {
@@ -85,53 +81,32 @@ public class UserService implements UserDetailsService {
 
         emailService.sendEmail(userRegisterDto.getEmail(), subject, text);
 
-        webSocketController.sendMessage("Пользователь успешно зарегистрирован. Для активации аккаунта подтвердите email.");
         return newUser;
     }
 
-
     public boolean confirmEmail(String token) {
-        webSocketController.sendMessage("Попытка подтверждения email с токеном: " + token);
-
         User user = userRepository.findByConfirmationToken(token).orElse(null);
         if (user != null) {
             user.setUserStatus(UserStatus.ACTIVE);
             user.setConfirmationToken(null);
             userRepository.save(user);
-
-            webSocketController.sendMessage("Email успешно подтверждён.");
             return true;
         }
-
-        webSocketController.sendMessage("Неверный или просроченный токен подтверждения.");
         return false;
     }
 
     public User updateUserStatus(Long userId, UserStatus newStatus) {
-        webSocketController.sendMessage("Обновление статуса пользователя ID: " + userId + " на " + newStatus);
-
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> {
-                    String errorMessage = "Пользователь с ID " + userId + " не найден.";
-                    webSocketController.sendMessage(errorMessage);
-                    return new IllegalArgumentException(errorMessage);
-                });
-
+                .orElseThrow(() -> new IllegalArgumentException("Пользователь с ID " + userId + " не найден."));
         user.setUserStatus(newStatus);
-        User updatedUser = userRepository.save(user);
-
-        webSocketController.sendMessage("Статус пользователя обновлён на " + newStatus);
-        return updatedUser;
+        return userRepository.save(user);
     }
-
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
 
     public void restorePassword(User user) {
-        webSocketController.sendMessage("Инициализация восстановления пароля для пользователя с email: " + user.getEmail());
-
         String resetToken = UUID.randomUUID().toString();
         user.setPasswordResetToken(resetToken);
         user.setPasswordResetTokenExpiration(System.currentTimeMillis() + 3600000);
@@ -141,8 +116,6 @@ public class UserService implements UserDetailsService {
         emailService.sendEmail(user.getEmail(),
                 "Восстановление пароля",
                 "Перейдите по ссылке для восстановления пароля:\n" + url);
-
-        webSocketController.sendMessage("Ссылка для восстановления пароля отправлена на email: " + user.getEmail());
     }
 
 
@@ -225,8 +198,6 @@ public class UserService implements UserDetailsService {
     }
 
     public void saveAvatar(Long userId, MultipartFile file) throws IOException {
-        webSocketController.sendMessage("Попытка загрузки аватара для пользователя ID: " + userId);
-
         String projectDir = System.getProperty("user.dir");
         Path avatarDir = Paths.get(projectDir, "src/main/resources/avatar");
 
@@ -236,9 +207,7 @@ public class UserService implements UserDetailsService {
 
         String originalFileName = file.getOriginalFilename();
         if (originalFileName == null) {
-            String errorMessage = "Имя файла отсутствует.";
-            webSocketController.sendMessage(errorMessage);
-            throw new IOException(errorMessage);
+            throw new IOException("Имя файла отсутствует.");
         }
 
         String safeFileName = originalFileName.replaceAll("[^a-zA-Z0-9.]", "_");
@@ -248,17 +217,12 @@ public class UserService implements UserDetailsService {
         file.transferTo(filePath.toFile());
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> {
-                    String errorMessage = "Пользователь с ID " + userId + " не найден.";
-                    webSocketController.sendMessage(errorMessage);
-                    return new RuntimeException(errorMessage);
-                });
+                .orElseThrow(() -> new RuntimeException("Пользователь с ID " + userId + " не найден."));
 
         user.setAvatarPath("/avatar/" + uniqueFileName);
         userRepository.save(user);
-
-        webSocketController.sendMessage("Аватар успешно сохранён для пользователя ID: " + userId);
     }
+
 
     public String getAvatarPath(Long userId) {
         User user = userRepository.findById(userId)
